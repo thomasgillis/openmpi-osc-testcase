@@ -68,6 +68,11 @@ int main(int argc, char** argv){
     const int n_repeat = 500;
 
     double t0 = MPI_Wtime();
+
+#ifndef COMM_ACTIVE
+    MPI_Win_fence(0,my_win);
+#endif
+
     for(int ir=0; ir<n_repeat; ++ir){
 #ifdef COMM_ACTIVE
         // start the exposures
