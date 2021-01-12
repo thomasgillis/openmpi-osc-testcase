@@ -13,7 +13,7 @@
 
 HOME_TST=/home/ucl/tfl/tgillis/openmpi-dbg/openmpi-osc-testcase
 SCRATCH=$GLOBALSCRATCH
-RUN_DIR=ompi_dbg_${SLURM_JOB_NUM_NODES}_${SLURM_JOB_ID}
+RUN_DIR=ompi_dbg_${SLURM_JOB_ID}
 #RUN_DIR=murphy_weak/murphy_weak_${SLURM_JOB_NUM_NODES}_${SLURM_JOB_ID}
 
 # create the tmp directory

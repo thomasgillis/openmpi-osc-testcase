@@ -65,15 +65,10 @@ int main(int argc, char** argv){
     MPI_Group orig_group; // my origin group
     MPI_Group_incl(win_group,1,&orig_rank,&orig_group);
 
-    double t_glob_avg = 0.0;
-    double t_glob_min = 1e+10;
-    double t_glob_max = 0.0;
-
     const int n_repeat = 500;
+
+    double t0 = MPI_Wtime();
     for(int ir=0; ir<n_repeat; ++ir){
-
-        double t0 = MPI_Wtime();
-
 #ifdef COMM_ACTIVE
         // start the exposures
         MPI_Win_post(orig_group,MPI_MODE_NOPUT,my_win);
@@ -82,6 +77,7 @@ int main(int argc, char** argv){
         MPI_Win_start(trg_group,0,my_win);
 #else
         MPI_Win_lock(MPI_LOCK_SHARED,trg_rank,0,my_win);
+        MPI_Win_lock(MPI_LOCK_SHARED,orig_rank,0,my_win);
 #endif
 
         // send the get
@@ -93,32 +89,26 @@ int main(int argc, char** argv){
         // end the exposures
         MPI_Win_wait(my_win);
 #else
+        MPI_Win_unlock(orig_rank,my_win);
         MPI_Win_unlock(trg_rank,my_win);
 #endif
-        
-        // take the final timing
-        double t1 = MPI_Wtime();
-        double t = t1-t0;
+    }        
+    // take the final timing
+    double t1 = MPI_Wtime();
+    double t = (t1-t0)/n_repeat;
 
-        // average the time over the cpus
-        double t_avg, t_min, t_max;
-        MPI_Allreduce(&t,&t_avg,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-        MPI_Allreduce(&t,&t_min,1,MPI_DOUBLE,MPI_MIN,MPI_COMM_WORLD);
-        MPI_Allreduce(&t,&t_max,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
-
-        t_avg = t_avg/comm_size;
-
-        // store the timing in the global timer
-        t_glob_avg += t_avg/n_repeat;
-        t_glob_min = fmin(t_min,t_glob_min);
-        t_glob_max = fmax(t_max,t_glob_max);
-    }
+    // average the time over the cpus
+    double t_avg, t_min, t_max;
+    MPI_Allreduce(&t,&t_avg,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(&t,&t_min,1,MPI_DOUBLE,MPI_MIN,MPI_COMM_WORLD);
+    MPI_Allreduce(&t,&t_max,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
+    t_avg = t_avg/comm_size;
 
     if(rank == 0){
 #ifdef COMM_ACTIVE
-        printf("ACTIVE - measure %d times: %f sec on avg (min = %f, max = %f)\n",n_repeat,t_glob_avg,t_glob_min,t_glob_max);
+        printf("ACTIVE - measure %d times: %f sec on avg (min = %f, max = %f)\n",n_repeat,t_avg,t_min,t_max);
 #else
-        printf("PASSIVE - measure %d times: %f sec on avg (min = %f, max = %f)\n",n_repeat,t_glob_avg,t_glob_min,t_glob_max);
+        printf("PASSIVE - measure %d times: %f sec on avg (min = %f, max = %f)\n",n_repeat,t_avg,t_min,t_max);
 #endif
     }
     
