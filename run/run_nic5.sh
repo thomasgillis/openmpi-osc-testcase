@@ -34,4 +34,7 @@ mpirun --mca osc ucx ./ompi_passive
 echo "PT2PT:"
 mpirun --mca osc pt2pt ./ompi_active
 mpirun --mca osc pt2pt ./ompi_passive
-#mpirun --mca osc ucx valgrind --error-limit=no --leak-check=full --suppressions=${EBROOTOPENMPI}/share/openmpi/openmpi-valgrind.supp ./murphy --abc --profile --iter-max=100 --iter-dump=50 --dump-detail=0 --rtol=1e-4 --ctol=1e-6 --vr-sigma=0.025 --dom=1,1,$SLURM_JOB_NUM_NODES > log_$SLURM_JOB_ID.log
+
+echo "RDMA:"
+mpirun --mca osc rdma ./ompi_active
+mpirun --mca osc rdma ./ompi_passive

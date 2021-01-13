@@ -82,7 +82,6 @@ int main(int argc, char** argv){
         MPI_Win_start(trg_group,0,my_win);
 #else
         MPI_Win_lock(MPI_LOCK_SHARED,trg_rank,0,my_win);
-        MPI_Win_lock(MPI_LOCK_SHARED,orig_rank,0,my_win);
 #endif
 
         // send the get
@@ -94,7 +93,6 @@ int main(int argc, char** argv){
         // end the exposures
         MPI_Win_wait(my_win);
 #else
-        MPI_Win_unlock(orig_rank,my_win);
         MPI_Win_unlock(trg_rank,my_win);
 #endif
     }        
